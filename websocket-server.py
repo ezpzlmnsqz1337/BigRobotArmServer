@@ -4,6 +4,7 @@ import usbRobotArm
 class SimpleEcho(WebSocket):
     def handle(self):
         message = self.data.rstrip('\r').rstrip('\n')
+        print(message)
 
         if usbRobotArm.isConnected():
             if message == 'disconnect':
@@ -13,7 +14,7 @@ class SimpleEcho(WebSocket):
                 response = usbRobotArm.sendCommand(message)
                 self.send_message(response)
         else:
-            if message== 'connect':
+            if message == 'connect':
                 usbRobotArm.connect()
                 self.send_message(getConnectionStatus())
 
