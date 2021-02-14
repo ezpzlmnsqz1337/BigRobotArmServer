@@ -19,9 +19,9 @@ def connect():
          usb = serial.Serial('/dev/ttyUSB1', BAUD_RATE, timeout=2)
          print("USB: Connection successfull!")
          usb.readline()
+         return True
       except:
          print("ERROR - Could not open USB serial port.  Please check your port name and permissions.")
-         print("Exiting program.")
          return False
 
 def disconnect():
