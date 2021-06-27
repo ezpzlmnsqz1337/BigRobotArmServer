@@ -62,7 +62,7 @@ def sendCommand(command):
       line = usb.readline().decode().strip()
       if len(line) > 0:
          response += f'{line}\n'
-      print(f'Line2: {line}')
+      # print(f'Line2: {line}')
 
    print(response)
    # usb.reset_input_buffer()
