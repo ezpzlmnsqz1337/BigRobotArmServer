@@ -38,4 +38,5 @@ def parseCommand(message):
   return BitStream('0x00')  # invalid message
 
 
-parseCommand('M203 B2000 S2500 E3000 WR3500 W4000')
+parseCommand('G0 B2000 S2500 E3000 WR3500 W4000')
+parseCommand('G1 E1 P100')

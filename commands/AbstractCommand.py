@@ -4,27 +4,26 @@ import string
 
 
 class AbstractCommand:
-  def __init__(self, commandId) -> None:
+  def __init__(self, commandId, paramTypes=[]) -> None:
     self.commandId = commandId
+    self.paramTypes = paramTypes
 
   def parseCommand(self, command):
     stream = BitStream()
     stream.append(pack('uint:8', self.commandId))
-    self.parseCommandData(stream, command)
+    self.parseCommandParams(stream, command)
+    print(stream)
     return stream
 
-  def parseCommandData(self, stream, command):
-    return
+  def parseCommandParams(self, stream, command):
+    params = command.split()
+    # first part of command parameters (positions, speeds, accels) is command type (eg: G0, G1, M250, G28)
+    params.pop(0)
+    # add command parameters
+    for i, p in enumerate(params):
+      value = int(p.strip(string.ascii_letters))
+      valueType = self.paramTypes[i] if len(self.paramTypes) > i else 'int:32'
+      stream.append(pack(valueType, value))
 
   def parseResponse(self, response):
     return
-
-  def parseJointData(self, stream, message):
-    jointsData = message.split()
-    # first part of joint data (positions, speeds, accels) is command type (eg: G0, G1, M250, G28)
-    jointsData.pop(0)
-    # add joint positions without the letters
-    for j in jointsData:
-      steps = int(j.strip(string.ascii_letters))
-      stream.append(pack('int:32', steps))
-      print(stream)
