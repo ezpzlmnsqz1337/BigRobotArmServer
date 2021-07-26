@@ -1,5 +1,12 @@
-def parseCommand(command):
-  return
+#!/usr/bin/env python3
+from commands.AbstractCommand import AbstractCommand
 
-def parseResponse(response):
-  return
+STATUS_COMMAND_ID = 8
+
+
+class StatusCommand(AbstractCommand):
+  def __init__(self) -> None:
+    super().__init__(STATUS_COMMAND_ID)
+
+  def parseResponse(self, response):
+    return
