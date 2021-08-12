@@ -9,6 +9,3 @@ GOTO_COMMAND_ID = 1
 class PositionCommand(AbstractCommand):
   def __init__(self) -> None:
     super().__init__(GOTO_COMMAND_ID)
-
-  def parseResponse(self, response):
-    return

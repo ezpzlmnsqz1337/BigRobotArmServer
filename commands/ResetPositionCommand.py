@@ -8,6 +8,3 @@ RESET_POSITION_COMMAND_ID = 3
 class ResetPositionCommand(AbstractCommand):
   def __init__(self) -> None:
     super().__init__(RESET_POSITION_COMMAND_ID)
-
-  def parseResponse(self, response):
-    return

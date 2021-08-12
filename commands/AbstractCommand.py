@@ -13,7 +13,7 @@ class AbstractCommand:
     stream.append(pack('uint:8', self.commandId))
     self.parseCommandParams(stream, command)
     print(stream)
-    return stream
+    return stream.tobytes()
 
   def parseCommandParams(self, stream, command):
     params = command.split()
@@ -26,4 +26,4 @@ class AbstractCommand:
       stream.append(pack(valueType, value))
 
   def parseResponse(self, response):
-    return
+    return 'BigRobotArm::READY'
