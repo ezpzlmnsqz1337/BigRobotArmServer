@@ -8,7 +8,7 @@ SYNC_MOTORS_COMMAND_ID = 7
 
 
 class SyncMotorsCommand(AbstractCommand):
-  def __init__(self) -> None:
+  def __init__(self):
     super().__init__(SYNC_MOTORS_COMMAND_ID)
 
   def parseCommandParams(self, stream, command):

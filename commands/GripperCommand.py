@@ -6,5 +6,5 @@ GRIPPER_COMMAND_ID = 6
 
 
 class GripperCommand(AbstractCommand):
-  def __init__(self) -> None:
+  def __init__(self):
     super().__init__(GRIPPER_COMMAND_ID, ['uint:8', 'uint:8'])

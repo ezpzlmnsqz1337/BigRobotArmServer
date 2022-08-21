@@ -5,5 +5,5 @@ BEGIN_COMMAND_ID = 9
 
 
 class BeginCommand(AbstractCommand):
-  def __init__(self) -> None:
+  def __init__(self):
     super().__init__(BEGIN_COMMAND_ID)

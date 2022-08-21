@@ -5,5 +5,5 @@ ACCEL_COMMAND_ID = 5
 
 
 class AccelerationCommand(AbstractCommand):
-  def __init__(self) -> None:
+  def __init__(self):
     super().__init__(ACCEL_COMMAND_ID)

@@ -4,9 +4,9 @@ import string
 
 
 class AbstractCommand:
-  def __init__(self, commandId, paramTypes=[]) -> None:
+  def __init__(self, commandId, paramTypes):
     self.commandId = commandId
-    self.paramTypes = paramTypes
+    self.paramTypes = paramTypes if paramTypes != None else []
 
   def parseCommand(self, command):
     stream = BitStream()
