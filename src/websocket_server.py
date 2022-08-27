@@ -1,6 +1,6 @@
 from simple_websocket_server import WebSocketServer, WebSocket
-import usbRobotArm
-from CommandBuilder import CommandBuilder
+import usb_robot_arm
+from command_builder import CommandBuilder
 
 
 class SimpleEcho(WebSocket):
@@ -9,16 +9,16 @@ class SimpleEcho(WebSocket):
     message = self.data.rstrip('\r').rstrip('\n')
     print(message)
 
-    if usbRobotArm.isConnected():
+    if usb_robot_arm.is_connected():
       if message == 'disconnect':
-        usbRobotArm.disconnect()
+        usb_robot_arm.disconnect()
         self.send_message(getConnectionStatus())
       else:
-        response = usbRobotArm.sendCommand(cb.parseCommand(message))
-        self.send_message(cb.parseResponse(response))
+        response = usb_robot_arm.send_command(cb.parse_command(message))
+        self.send_message(cb.parse_response(response))
     else:
       if message == 'connect':
-        usbRobotArm.connect()
+        usb_robot_arm.connect()
         self.send_message(getConnectionStatus())
 
   def connected(self):
@@ -30,7 +30,7 @@ class SimpleEcho(WebSocket):
 
 
 def getConnectionStatus():
-  status = 1 if usbRobotArm.isConnected() else 0
+  status = 1 if usb_robot_arm.is_connected() else 0
   return f'connectionStatus:{status}'
 
 

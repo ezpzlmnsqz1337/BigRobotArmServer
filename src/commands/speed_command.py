@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from commands.AbstractCommand import AbstractCommand
+from abstract_command import AbstractCommand
 
 SPEED_COMMAND_ID = 4
 

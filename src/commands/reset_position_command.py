@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from commands.AbstractCommand import AbstractCommand
+from abstract_command import AbstractCommand
 from bitstring import BitStream, pack
 
 RESET_POSITION_COMMAND_ID = 3
