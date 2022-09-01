@@ -5,7 +5,7 @@ import time
 
 USB_PORT = "/dev/ttyUSB0"
 BAUD_RATE = 250000
-usb = None
+usb: serial.Serial = None
 
 
 def connect():
@@ -58,15 +58,15 @@ def send_command(command):
   usb.write(command)
   usb.write(b'\r')
 
-  response = ''
-  line = ''
+  response = b''
+  line = b''
   while '200' not in line:
     time.sleep(0.1)
-    line = usb.readline().decode().strip()
+    line = usb.readline()
     if len(line) > 0:
-      response += f'{line}\n'
-    print(f'Line2: {line}')
+      response += line
+  #   print(f'Line2: {line}')
 
-  print(response)
+  # print(response)
   # usb.reset_input_buffer()
   return response

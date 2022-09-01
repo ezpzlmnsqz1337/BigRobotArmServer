@@ -1,6 +1,6 @@
 from simple_websocket_server import WebSocketServer, WebSocket
-import usb_robot_arm
-from command_builder import CommandBuilder
+from . import usb_robot_arm
+from .command_builder import CommandBuilder
 
 
 class SimpleEcho(WebSocket):

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-from abstract_command import AbstractCommand
 from bitstring import pack
+from .abstract_command import AbstractCommand
 
 GRIPPER_COMMAND_ID = 6
 
 
 class GripperCommand(AbstractCommand):
   def __init__(self):
-    super().__init__(GRIPPER_COMMAND_ID, ['uint:8', 'uint:8'])
+    super(AbstractCommand, self).__init__(
+        GRIPPER_COMMAND_ID, ['uint:8', 'uint:8'])

@@ -2,16 +2,16 @@
 import string
 
 from bitstring import pack
-from abstract_command import AbstractCommand
+from .abstract_command import AbstractCommand
 
 SYNC_MOTORS_COMMAND_ID = 7
 
 
 class SyncMotorsCommand(AbstractCommand):
   def __init__(self):
-    super().__init__(SYNC_MOTORS_COMMAND_ID)
+    super(AbstractCommand, self).__init__(SYNC_MOTORS_COMMAND_ID)
 
-  def parse_commandParams(self, stream, command):
+  def parse_command_params(self, stream, command):
     value = int(command.strip(string.ascii_letters))
     stream.append(pack('uint:8', value))
 
