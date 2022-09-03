@@ -14,8 +14,9 @@ class SimpleEcho(WebSocket):
         usb_robot_arm.disconnect()
         self.send_message(getConnectionStatus())
       else:
-        response = usb_robot_arm.send_command(cb.parse_command(message))
-        self.send_message(cb.parse_response(response))
+        serial_command = cb.parse_web_message(message)
+        serial_response = usb_robot_arm.send_serial_command(serial_command)
+        self.send_message(cb.parse_serial_response(serial_response))
     else:
       if message == 'connect':
         usb_robot_arm.connect()

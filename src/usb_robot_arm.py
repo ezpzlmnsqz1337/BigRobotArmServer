@@ -53,20 +53,11 @@ def deg_to_steps(b, s, e, wr, w):
   return f'X{base} Y{shoulder} Z{elbow} E{wrist_rotate} F{wrist}'.encode()
 
 
-def send_command(command):
+def send_serial_command(command):
   print(f'Sending: {command}\n')
   usb.write(command)
   usb.write(b'\r')
 
-  response = b''
-  line = b''
-  while '200' not in line:
-    time.sleep(0.1)
-    line = usb.readline()
-    if len(line) > 0:
-      response += line
-  #   print(f'Line2: {line}')
+  response = usb.read_until(b'200\n\r')
 
-  # print(response)
-  # usb.reset_input_buffer()
   return response

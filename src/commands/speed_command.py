@@ -6,4 +6,4 @@ SPEED_COMMAND_ID = 4
 
 class SpeedCommand(AbstractCommand):
   def __init__(self):
-    super(AbstractCommand, self).__init__(SPEED_COMMAND_ID)
+    super().__init__(SPEED_COMMAND_ID)

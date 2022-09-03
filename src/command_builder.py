@@ -17,7 +17,7 @@ class CommandBuilder:
   def __init__(self):
     self.current_command = None
 
-  def parse_command(self, message):
+  def parse_web_message(self, message):
 
     command_type = message[0:4]
     if 'G0' in command_type:
@@ -45,7 +45,7 @@ class CommandBuilder:
       return BitStream('0x00').bytes  # invalid message
     return self.current_command.parse_command(message)
 
-  def parse_response(self, message):
+  def parse_serial_response(self, message):
     if self.current_command == None:
       return BitStream('0x00').bytes  # no command being processed
 
