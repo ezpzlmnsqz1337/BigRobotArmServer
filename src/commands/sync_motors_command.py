@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import string
 from bitstring import BitStream, pack
-from .abstract_command import AbstractCommand
+from commands.abstract_command import AbstractCommand
 
 SYNC_MOTORS_COMMAND_ID = 7
 

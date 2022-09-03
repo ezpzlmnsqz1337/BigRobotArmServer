@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from .abstract_command import AbstractCommand
+from commands.abstract_command import AbstractCommand
 
 END_COMMAND_ID = 10
 

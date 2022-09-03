@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 from bitstring import BitStream
 
-from .commands.acceleration_command import AccelerationCommand
-from .commands.begin_command import BeginCommand
-from .commands.end_command import EndCommand
-from .commands.gripper_command import GripperCommand
-from .commands.home_command import HomeCommand
-from .commands.position_command import PositionCommand
-from .commands.reset_position_command import ResetPositionCommand
-from .commands.speed_command import SpeedCommand
-from .commands.status_command import StatusCommand
-from .commands.sync_motors_command import SyncMotorsCommand
+from commands.acceleration_command import AccelerationCommand
+from commands.begin_command import BeginCommand
+from commands.end_command import EndCommand
+from commands.gripper_command import GripperCommand
+from commands.home_command import HomeCommand
+from commands.position_command import PositionCommand
+from commands.reset_position_command import ResetPositionCommand
+from commands.speed_command import SpeedCommand
+from commands.status_command import StatusCommand
+from commands.sync_motors_command import SyncMotorsCommand
 
 
 class CommandBuilder:

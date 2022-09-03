@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from bitstring import BitStream
-from .abstract_command import AbstractCommand
+from commands.abstract_command import AbstractCommand
 
 STATUS_COMMAND_ID = 8
 
