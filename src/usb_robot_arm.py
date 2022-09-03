@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-import serial
 import math
-import time
+import serial
 
 USB_PORT = "/dev/ttyUSB0"
 BAUD_RATE = 250000
@@ -53,11 +52,14 @@ def deg_to_steps(b, s, e, wr, w):
   return f'X{base} Y{shoulder} Z{elbow} E{wrist_rotate} F{wrist}'.encode()
 
 
-def send_serial_command(command):
-  print(f'Sending: {command}\n')
+def send_serial_command(command: bytes):
+  print(f'Sending: {command.hex()}\n')
   usb.write(command)
   usb.write(b'\r')
 
-  response = usb.read_until(b'200\n\r')
+  response = b""
+  while b"200\r\n" not in response:
+    response += usb.read()
+  print(f'Received: {response}\n')
 
   return response
