@@ -10,7 +10,7 @@ class GripperCommand(AbstractCommand):
     super().__init__(GRIPPER_COMMAND_ID, ["uint:8", "uint:8"])
 
   def parse_serial_response(self, response: bytes):
-    data = response.splitlines()
+    data = response.split(b'\r\n')
     stream = BitStream(data[1])
     e = stream.read("uint:8")
     p = stream.read("uint:8")

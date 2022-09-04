@@ -58,8 +58,9 @@ def send_serial_command(command: bytes):
   usb.write(b'\r')
 
   response = b""
-  while b"200\r\n" not in response:
+  while b"\xc8\r\n" not in response:
     response += usb.read()
+  print(f'Received: {response.hex()}\n')
   print(f'Received: {response}\n')
 
   return response

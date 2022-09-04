@@ -47,9 +47,16 @@ class CommandBuilder:
 
   def parse_serial_response(self, message):
     if self.current_command == None:
-      return BitStream('0x00').bytes  # no command being processed
+      result = "BigRobotArm::INVALID-COMMAND\n"
+      result += "BigRobotArm::READY"
+      return result
 
-    result = self.current_command.parse_serial_response(message)
+    if self.current_command.is_serial_response_valid(message):
+      result = self.current_command.parse_serial_response(message)
+    else:
+      result = "BigRobotArm::INVALID-COMMAND\n"
+      result += "BigRobotArm::READY"
+
     # command processing ended
     self.current_command = None
     return result

@@ -35,5 +35,8 @@ class AbstractCommand:
     p_wrist: int = stream.read("intle:32")
     return p_base, p_shoulder, p_elbow, p_wrist_rotate, p_wrist
 
+  def is_serial_response_valid(self, response: bytes):
+    return b'\xc9\r\n' not in response
+
   def parse_serial_response(self, response: bytes):
     return 'BigRobotArm::READY'

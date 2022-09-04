@@ -10,7 +10,7 @@ class StatusCommand(AbstractCommand):
     super().__init__(STATUS_COMMAND_ID)
 
   def parse_serial_response(self, response: bytes):
-    data = response.splitlines()
+    data = response.split(b'\r\n')
     stream = BitStream(data[1])
 
     result = ""

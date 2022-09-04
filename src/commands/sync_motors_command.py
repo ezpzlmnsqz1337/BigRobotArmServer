@@ -15,7 +15,7 @@ class SyncMotorsCommand(AbstractCommand):
     stream.append(pack("uint:8", value))
 
   def parse_serial_response(self, response: bytes):
-    data = response.splitlines()
+    data = response.split(b'\r\n')
     stream = BitStream(data[1])
     s = stream.read("uint:8")
     result = f"BigRobotArm::SYNC-MOTORS: {s}\n"
