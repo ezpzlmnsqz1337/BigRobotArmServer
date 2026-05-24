@@ -1,0 +1,15 @@
+[Unit]
+Description=BigRobotArm HTTP file server
+After=network.target
+
+[Service]
+Type=simple
+User=__BIGROBOTARM_USER__
+WorkingDirectory=__BIGROBOTARM_SERVER_DIR__
+Environment=PATH=/home/__BIGROBOTARM_USER__/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/__BIGROBOTARM_USER__/.local/bin/uv run python -m http.server 8000 --directory __BIGROBOTARM_SERVER_DIR__/www
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

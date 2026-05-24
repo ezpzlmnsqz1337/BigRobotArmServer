@@ -1,2 +1,6 @@
 __pycache__
+.venv/
+run/
+deploy.env
 www/*
+.gitignore

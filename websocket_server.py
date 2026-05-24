@@ -1,5 +1,5 @@
 from simple_websocket_server import WebSocketServer, WebSocket
-import usbRobotArm
+import usb_robot_arm
 
 class SimpleEcho(WebSocket):
     def handle(self):
@@ -7,18 +7,18 @@ class SimpleEcho(WebSocket):
         print(message)
 
         try:
-            if usbRobotArm.isConnected():
+            if usb_robot_arm.isConnected():
                 if message == 'disconnect':
-                    usbRobotArm.disconnect()
+                    usb_robot_arm.disconnect()
                     self.send_message(getConnectionStatus())
                 else:
-                    response = usbRobotArm.sendCommand(message)
+                    response = usb_robot_arm.sendCommand(message)
                     self.send_message(response)
             else:
                 if message == 'connect':
-                    usbRobotArm.connect()
+                    usb_robot_arm.connect()
                     self.send_message(getConnectionStatus())
-        except usbRobotArm.ConnectionLostError as error:
+        except usb_robot_arm.ConnectionLostError as error:
             self.send_message(f'{getConnectionStatus()}\nERROR: {error}')
 
     def connected(self):
@@ -29,8 +29,8 @@ class SimpleEcho(WebSocket):
         print(self.address, 'closed')
 
 def getConnectionStatus():
-     status = 1 if usbRobotArm.isConnected() else 0
-     return f'connectionStatus:{status}'
+    status = 1 if usb_robot_arm.isConnected() else 0
+    return f'connectionStatus:{status}'
 
 server = WebSocketServer('', 1337, SimpleEcho)
 server.serve_forever()

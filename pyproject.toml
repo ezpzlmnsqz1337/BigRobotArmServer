@@ -1,0 +1,9 @@
+[project]
+name = "bigrobotarm-server"
+version = "0.1.0"
+description = "USB and WebSocket bridge for BigRobotArm"
+requires-python = ">=3.9"
+dependencies = [
+    "pyserial>=3.5",
+    "simple-websocket-server>=0.4.4",
+]

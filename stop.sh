@@ -1,2 +1,5 @@
-ps axf | grep http.server | grep -v grep | awk '{print "kill -9 " $1}' | sh
-ps axf | grep websocket-server | grep -v grep | awk '{print "kill -9 " $1}' | sh
+#!/bin/bash
+
+set -euo pipefail
+
+sudo systemctl stop bigrobotarm-http.service bigrobotarm-websocket.service
