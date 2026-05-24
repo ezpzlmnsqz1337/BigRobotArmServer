@@ -6,17 +6,20 @@ class SimpleEcho(WebSocket):
         message = self.data.rstrip('\r').rstrip('\n')
         print(message)
 
-        if usbRobotArm.isConnected():
-            if message == 'disconnect':
-                usbRobotArm.disconnect()
-                self.send_message(getConnectionStatus())
+        try:
+            if usbRobotArm.isConnected():
+                if message == 'disconnect':
+                    usbRobotArm.disconnect()
+                    self.send_message(getConnectionStatus())
+                else:
+                    response = usbRobotArm.sendCommand(message)
+                    self.send_message(response)
             else:
-                response = usbRobotArm.sendCommand(message)
-                self.send_message(response)
-        else:
-            if message == 'connect':
-                usbRobotArm.connect()
-                self.send_message(getConnectionStatus())
+                if message == 'connect':
+                    usbRobotArm.connect()
+                    self.send_message(getConnectionStatus())
+        except usbRobotArm.ConnectionLostError as error:
+            self.send_message(f'{getConnectionStatus()}\nERROR: {error}')
 
     def connected(self):
         print(self.address, 'connected')

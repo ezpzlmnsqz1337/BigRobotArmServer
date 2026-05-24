@@ -8,6 +8,21 @@ BAUD_RATE = 250000
 COMMAND_READY_TIMEOUT_SECONDS = 30
 usb = None
 
+
+class ConnectionLostError(RuntimeError):
+   pass
+
+
+def clearConnection():
+   global usb
+   if usb is not None:
+      try:
+         if usb.is_open:
+            usb.close()
+      except serial.SerialException:
+         pass
+   usb = None
+
 def connect():
    try:
       global usb
@@ -27,11 +42,10 @@ def connect():
 
 def disconnect():
    print("USB: Disconnection successfull!")
-   global usb
-   usb = usb.close()
+   clearConnection()
 
 def isConnected():
-   return usb != None
+   return usb is not None and usb.is_open
 
 def degToSteps(b,s,e,wr,w):
    # 90°                   1°
@@ -50,24 +64,28 @@ def degToSteps(b,s,e,wr,w):
    return f'X{base} Y{shoulder} Z{elbow} E{wristRotate} F{wrist}'.encode()
 
 def sendCommand(command):   
-   if command == "G28":
-      usb.write(b'G28\r')
-   else:
-      print(command.encode() + b'\r')
-      usb.write(command.encode() + b'\r')
-      
-   response = ''
-   line = ''
-   deadline = time.monotonic() + COMMAND_READY_TIMEOUT_SECONDS
-   while 'READY' not in line:
-      if time.monotonic() >= deadline:
-         response += 'ERROR: Timed out waiting for READY\n'
-         break
-      time.sleep(0.1)
-      line = usb.readline().decode().strip()
-      if len(line) > 0:
-         response += f'{line}\n'
-      # print(f'Line2: {line}')
+   try:
+      if command == "G28":
+         usb.write(b'G28\r')
+      else:
+         print(command.encode() + b'\r')
+         usb.write(command.encode() + b'\r')
+         
+      response = ''
+      line = ''
+      deadline = time.monotonic() + COMMAND_READY_TIMEOUT_SECONDS
+      while 'READY' not in line:
+         if time.monotonic() >= deadline:
+            response += 'ERROR: Timed out waiting for READY\n'
+            break
+         time.sleep(0.1)
+         line = usb.readline().decode().strip()
+         if len(line) > 0:
+            response += f'{line}\n'
+         # print(f'Line2: {line}')
+   except (serial.SerialException, OSError, UnicodeDecodeError) as error:
+      clearConnection()
+      raise ConnectionLostError('Serial connection lost during command forwarding') from error
 
    print(response)
    # usb.reset_input_buffer()
