@@ -5,6 +5,7 @@ import time
 
 USB_PORT = "/dev/ttyUSB0"
 BAUD_RATE = 250000
+COMMAND_READY_TIMEOUT_SECONDS = 30
 usb = None
 
 def connect():
@@ -57,7 +58,11 @@ def sendCommand(command):
       
    response = ''
    line = ''
+   deadline = time.monotonic() + COMMAND_READY_TIMEOUT_SECONDS
    while 'READY' not in line:
+      if time.monotonic() >= deadline:
+         response += 'ERROR: Timed out waiting for READY\n'
+         break
       time.sleep(0.1)
       line = usb.readline().decode().strip()
       if len(line) > 0:
