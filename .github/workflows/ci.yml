@@ -26,4 +26,4 @@ jobs:
         run: uv sync --group dev --locked
 
       - name: Run server checks
-        run: ./check.sh
+        run: bash ./check.sh
