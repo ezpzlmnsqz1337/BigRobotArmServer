@@ -76,6 +76,35 @@ class JobManagerTests(unittest.TestCase):
 
         release_jobs.set()
 
+    def test_runs_job_with_batch_executor_and_emits_progress(self):
+        events: list[JobPayload] = []
+        batch_calls: list[list[str]] = []
+
+        def batch_executor(commands, on_progress, is_cancel_requested):
+            batch_calls.append(commands)
+            self.assertFalse(is_cancel_requested())
+            on_progress('queued first\nBigRobotArm::READY\n')
+            on_progress('queued second\nBigRobotArm::READY\n')
+
+        manager = JobManager(
+            lambda command: f'OK {command}\nBigRobotArm::READY\n',
+            events.append,
+            batch_executor=batch_executor,
+        )
+        job = manager.submit_job(['G0 B0 S0 E0 WR0 W0', 'G0 B1 S1 E1 WR1 W1'], 'demo')
+
+        self._wait_for_status(manager, job['jobId'], 'completed')
+
+        final_status = manager.get_job_status(job['jobId'])
+        self.assertIsNotNone(final_status)
+        assert final_status is not None
+        self.assertEqual(final_status['currentIndex'], 2)
+        self.assertEqual(batch_calls, [['G0 B0 S0 E0 WR0 W0', 'G0 B1 S1 E1 WR1 W1']])
+        self.assertEqual(
+            [event['type'] for event in events],
+            ['jobQueued', 'jobStarted', 'jobProgress', 'jobProgress', 'jobCompleted'],
+        )
+
     def _wait_for_status(self, manager: JobManager, job_id: str, expected_status: str):
         for _ in range(100):
             status = manager.get_job_status(job_id)

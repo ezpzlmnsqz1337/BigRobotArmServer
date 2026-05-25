@@ -10,6 +10,9 @@ from typing import Any, Callable
 JobExecutor = Callable[[str], str]
 JobPayload = dict[str, Any]
 JobEventCallback = Callable[[JobPayload], None]
+JobProgressCallback = Callable[[str], None]
+JobCancelCheck = Callable[[], bool]
+JobBatchExecutor = Callable[[list[str], JobProgressCallback, JobCancelCheck], None]
 
 
 class JobConflictError(RuntimeError):
@@ -17,6 +20,10 @@ class JobConflictError(RuntimeError):
 
 
 class JobQueueFullError(RuntimeError):
+    pass
+
+
+class JobCancelledError(RuntimeError):
     pass
 
 
@@ -57,6 +64,7 @@ class JobManager:
         executor: JobExecutor,
         event_callback: JobEventCallback,
         max_queued_jobs: int = 3,
+        batch_executor: JobBatchExecutor | None = None,
     ):
         self._executor = executor
         self._event_callback = event_callback
@@ -65,6 +73,7 @@ class JobManager:
         self._active_job_id: str | None = None
         self._pending_job_ids: deque[str] = deque()
         self._max_queued_jobs = max_queued_jobs
+        self._batch_executor = batch_executor
 
     def has_active_job(self) -> bool:
         with self._lock:
@@ -170,6 +179,10 @@ class JobManager:
 
         self._emit('jobStarted', job)
 
+        if self._batch_executor is not None:
+            self._run_batch_job(job_id)
+            return
+
         while True:
             with self._lock:
                 job = self._jobs[job_id]
@@ -208,6 +221,55 @@ class JobManager:
                 job.current_index += 1
 
             self._emit('jobProgress', job)
+
+    def _run_batch_job(self, job_id: str) -> None:
+        batch_executor = self._batch_executor
+        if batch_executor is None:
+            raise RuntimeError('Batch executor is not configured')
+
+        try:
+            batch_executor(
+                self._jobs[job_id].commands,
+                lambda response: self._record_job_progress(job_id, response),
+                lambda: self._is_cancel_requested(job_id),
+            )
+        except JobCancelledError:
+            with self._lock:
+                job = self._jobs[job_id]
+                job.status = 'cancelled'
+                job.finished_at = time.time()
+                self._finish_current_job_locked()
+                self._emit('jobCancelled', job)
+            return
+        except Exception as error:
+            with self._lock:
+                job = self._jobs[job_id]
+                job.status = 'failed'
+                job.error = str(error)
+                job.finished_at = time.time()
+                self._finish_current_job_locked()
+                self._emit('jobFailed', job)
+            return
+
+        with self._lock:
+            job = self._jobs[job_id]
+            job.status = 'completed'
+            job.finished_at = time.time()
+            self._finish_current_job_locked()
+            self._emit('jobCompleted', job)
+
+    def _record_job_progress(self, job_id: str, response: str) -> None:
+        with self._lock:
+            job = self._jobs[job_id]
+            job.last_response = response
+            job.current_index += 1
+
+        self._emit('jobProgress', job)
+
+    def _is_cancel_requested(self, job_id: str) -> bool:
+        with self._lock:
+            job = self._jobs.get(job_id)
+            return job.cancel_requested if job is not None else True
 
     def _normalize_commands(self, commands: list[str]) -> list[str]:
         if not isinstance(commands, list) or not commands:

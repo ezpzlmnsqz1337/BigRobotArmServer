@@ -26,7 +26,11 @@ def broadcast_json_event(event: dict[str, Any]) -> None:
             clients.discard(client)
 
 
-job_manager = JobManager(usb_robot_arm.sendCommand, broadcast_json_event)
+job_manager = JobManager(
+    usb_robot_arm.sendCommand,
+    broadcast_json_event,
+    batch_executor=usb_robot_arm.sendBufferedJob,
+)
 
 
 def make_error_event(message: str, job_id: str | None = None) -> dict[str, str]:

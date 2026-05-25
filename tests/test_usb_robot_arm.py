@@ -56,6 +56,40 @@ class UsbRobotArmTests(unittest.TestCase):
 
         self.assertIsNone(usb_robot_arm.usb)
 
+    def test_send_buffered_job_retries_when_firmware_queue_is_full(self) -> None:
+        fake_usb = mock.Mock()
+        fake_usb.is_open = True
+        fake_usb.readline.side_effect = [
+            b'BigRobotArm::QUEUED-TO\n',
+            b'BigRobotArm::READY\n',
+            b'BigRobotArm::QUEUE-FULL\n',
+            b'BigRobotArm::READY\n',
+            b'BigRobotArm::QUEUED-TO\n',
+            b'BigRobotArm::READY\n',
+            b'BigRobotArm::QUEUE-DRAINED\n',
+            b'BigRobotArm::READY\n',
+        ]
+        usb_robot_arm.usb = fake_usb
+        responses: list[str] = []
+
+        with mock.patch.object(usb_robot_arm.time, 'sleep', return_value=None):
+            usb_robot_arm.sendBufferedJob(
+                ['G0 B0 S0 E0 WR0 W0', 'G0 B1 S1 E1 WR1 W1'],
+                responses.append,
+                lambda: False,
+            )
+
+        self.assertEqual(
+            fake_usb.write.call_args_list,
+            [
+                mock.call(b'Q0 B0 S0 E0 WR0 W0\r'),
+                mock.call(b'Q0 B1 S1 E1 WR1 W1\r'),
+                mock.call(b'Q0 B1 S1 E1 WR1 W1\r'),
+                mock.call(b'QFLUSH\r'),
+            ],
+        )
+        self.assertEqual(len(responses), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

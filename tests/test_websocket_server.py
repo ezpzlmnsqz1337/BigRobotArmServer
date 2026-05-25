@@ -23,6 +23,7 @@ class WebsocketServerTests(unittest.TestCase):
         self.original_job_manager = websocket_server.job_manager
         self.original_is_connected = websocket_server.usb_robot_arm.isConnected
         self.original_send_command = websocket_server.usb_robot_arm.sendCommand
+        self.original_send_buffered_job = websocket_server.usb_robot_arm.sendBufferedJob
 
         websocket_server.usb_robot_arm.isConnected = lambda: True
 
@@ -30,13 +31,24 @@ class WebsocketServerTests(unittest.TestCase):
             self.commands_run.append(command)
             return f'OK {command}\nBigRobotArm::READY\n'
 
+        def execute_buffered_job(commands, on_progress, is_cancel_requested) -> None:
+            for command in commands:
+                self.commands_run.append(command)
+                on_progress(f'OK {command}\nBigRobotArm::READY\n')
+
         websocket_server.usb_robot_arm.sendCommand = execute
-        websocket_server.job_manager = JobManager(execute, self.events.append)
+        websocket_server.usb_robot_arm.sendBufferedJob = execute_buffered_job
+        websocket_server.job_manager = JobManager(
+            execute,
+            self.events.append,
+            batch_executor=execute_buffered_job,
+        )
 
     def tearDown(self) -> None:
         websocket_server.job_manager = self.original_job_manager
         websocket_server.usb_robot_arm.isConnected = self.original_is_connected
         websocket_server.usb_robot_arm.sendCommand = self.original_send_command
+        websocket_server.usb_robot_arm.sendBufferedJob = self.original_send_buffered_job
 
     def test_submit_job_returns_job_status_and_executes_commands(self):
         client = self._make_client()
@@ -53,6 +65,7 @@ class WebsocketServerTests(unittest.TestCase):
         payload = json.loads(client.sent_messages[0])
         self.assertEqual(payload['type'], 'jobStatus')
         self.assertEqual(payload['job']['name'], 'Demo')
+        self.assertEqual(self.commands_run, ['G0 B0 S0 E0 WR0 W0', 'G28'])
 
     def test_get_queue_status_returns_active_and_pending_jobs(self):
         blocking_client = self._make_client()

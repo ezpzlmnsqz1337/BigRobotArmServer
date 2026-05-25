@@ -3,14 +3,21 @@ from __future__ import annotations
 
 import math
 import time
-from typing import Any
+from typing import Any, Callable
 
 import serial
+
+from job_manager import JobCancelledError
 
 USB_PORT = "/dev/ttyUSB0"
 USB_FALLBACK_PORT = "/dev/ttyUSB1"
 BAUD_RATE = 250000
 COMMAND_READY_TIMEOUT_SECONDS = 30
+QUEUE_RETRY_DELAY_SECONDS = 0.05
+BUFFERED_POSITION_COMMAND = 'Q0'
+QUEUE_FLUSH_COMMAND = 'QFLUSH'
+QUEUE_CLEAR_COMMAND = 'QCLEAR'
+QUEUE_FULL_RESPONSE = 'BigRobotArm::QUEUE-FULL'
 usb: Any | None = None
 
 
@@ -75,28 +82,38 @@ def degToSteps(b: float, s: float, e: float, wr: float, w: float) -> bytes:
     return f'X{base} Y{shoulder} Z{elbow} E{wrist_rotate} F{wrist}'.encode()
 
 
-def sendCommand(command: str) -> str:
+def _read_response_until_ready() -> str:
+    serial_port = usb
+    if serial_port is None:
+        raise ConnectionLostError('Serial connection is not open')
+
+    response = ''
+    line = ''
+    deadline = time.monotonic() + COMMAND_READY_TIMEOUT_SECONDS
+    while 'READY' not in line:
+        if time.monotonic() >= deadline:
+            response += 'ERROR: Timed out waiting for READY\n'
+            break
+        time.sleep(0.1)
+        line = serial_port.readline().decode().strip()
+        if line:
+            response += f'{line}\n'
+
+    return response
+
+
+def _send_serial_command(command: str) -> str:
     if usb is None or not usb.is_open:
         raise ConnectionLostError('Serial connection is not open')
 
     try:
-        if command == "G28":
+        if command == 'G28':
             usb.write(b'G28\r')
         else:
             print(command.encode() + b'\r')
             usb.write(command.encode() + b'\r')
 
-        response = ''
-        line = ''
-        deadline = time.monotonic() + COMMAND_READY_TIMEOUT_SECONDS
-        while 'READY' not in line:
-            if time.monotonic() >= deadline:
-                response += 'ERROR: Timed out waiting for READY\n'
-                break
-            time.sleep(0.1)
-            line = usb.readline().decode().strip()
-            if line:
-                response += f'{line}\n'
+        response = _read_response_until_ready()
     except (serial.SerialException, OSError, UnicodeDecodeError) as error:
         clearConnection()
         raise ConnectionLostError(
@@ -105,3 +122,69 @@ def sendCommand(command: str) -> str:
 
     print(response)
     return response
+
+
+def _is_position_command(command: str) -> bool:
+    return command.split(' ', 1)[0] == 'G0'
+
+
+def _to_buffered_position_command(command: str) -> str:
+    return BUFFERED_POSITION_COMMAND + command[2:]
+
+
+def _cancel_buffered_motion() -> None:
+    _send_serial_command(QUEUE_CLEAR_COMMAND)
+    _send_serial_command(QUEUE_FLUSH_COMMAND)
+    raise JobCancelledError('Job cancelled')
+
+
+def _enqueue_buffered_position(
+    command: str, is_cancel_requested: Callable[[], bool]
+) -> str:
+    while True:
+        if is_cancel_requested():
+            _cancel_buffered_motion()
+
+        response = _send_serial_command(_to_buffered_position_command(command))
+        if QUEUE_FULL_RESPONSE not in response:
+            return response
+
+        time.sleep(QUEUE_RETRY_DELAY_SECONDS)
+
+
+def _flush_buffered_motion(is_cancel_requested: Callable[[], bool]) -> None:
+    if is_cancel_requested():
+        _cancel_buffered_motion()
+
+    _send_serial_command(QUEUE_FLUSH_COMMAND)
+
+
+def sendCommand(command: str) -> str:
+    return _send_serial_command(command)
+
+
+def sendBufferedJob(
+    commands: list[str],
+    on_progress: Callable[[str], None],
+    is_cancel_requested: Callable[[], bool],
+) -> None:
+    has_buffered_motion = False
+
+    for command in commands:
+        normalized = command.strip()
+        if not normalized:
+            continue
+
+        if _is_position_command(normalized):
+            response = _enqueue_buffered_position(normalized, is_cancel_requested)
+            has_buffered_motion = True
+        else:
+            if has_buffered_motion:
+                _flush_buffered_motion(is_cancel_requested)
+                has_buffered_motion = False
+            response = _send_serial_command(normalized)
+
+        on_progress(response)
+
+    if has_buffered_motion:
+        _flush_buffered_motion(is_cancel_requested)
