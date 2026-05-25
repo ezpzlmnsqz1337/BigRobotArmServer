@@ -7,3 +7,26 @@ dependencies = [
     "pyserial>=3.5",
     "simple-websocket-server>=0.4.4",
 ]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.11.0",
+    "pytest>=8.3.0",
+    "ruff>=0.6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["job_manager.py", "usb_robot_arm.py", "websocket_server.py", "tests"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+check_untyped_defs = true
