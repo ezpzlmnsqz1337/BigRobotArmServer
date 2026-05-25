@@ -104,6 +104,55 @@ class WebsocketServerTests(unittest.TestCase):
         self.assertEqual(payload['type'], 'error')
         self.assertEqual(payload['message'], 'cancelJob requires a jobId')
 
+    def test_connect_message_returns_connection_status_when_disconnected(self):
+        client = self._make_client()
+        connect_calls: list[None] = []
+
+        websocket_server.usb_robot_arm.isConnected = lambda: False
+
+        def connect() -> bool:
+            connect_calls.append(None)
+            return True
+
+        websocket_server.usb_robot_arm.connect = connect
+        client.data = 'connect\n'
+
+        websocket_server.SimpleEcho.handle(self._as_socket(client))
+
+        self.assertEqual(connect_calls, [None])
+        self.assertEqual(client.sent_messages[-1], 'connectionStatus:0')
+
+    def test_disconnect_message_returns_connection_status_when_connected(self):
+        client = self._make_client()
+        disconnect_calls: list[None] = []
+
+        def disconnect() -> None:
+            disconnect_calls.append(None)
+
+        websocket_server.usb_robot_arm.disconnect = disconnect
+        client.data = 'disconnect\n'
+
+        websocket_server.SimpleEcho.handle(self._as_socket(client))
+
+        self.assertEqual(disconnect_calls, [None])
+        self.assertEqual(client.sent_messages[-1], 'connectionStatus:1')
+
+    def test_connection_lost_error_is_reported_with_connection_status(self):
+        client = self._make_client()
+
+        def send_command(command: str) -> str:
+            raise websocket_server.usb_robot_arm.ConnectionLostError('USB link dropped')
+
+        websocket_server.usb_robot_arm.sendCommand = send_command
+        client.data = 'M503\n'
+
+        websocket_server.SimpleEcho.handle(self._as_socket(client))
+
+        self.assertEqual(
+            client.sent_messages[-1],
+            'connectionStatus:1\nERROR: USB link dropped',
+        )
+
     def test_submit_job_rejects_non_string_name(self):
         client = self._make_client()
 

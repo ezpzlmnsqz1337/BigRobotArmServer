@@ -10,6 +10,7 @@ Webserver and WebSocket server to host BigRobotArmUI web page to control BigRobo
 
 ## Validate
 
+- Run the full local validation wrapper: `./check.sh`
 - Run all server tests: `uv run pytest`
 - Run linting: `uv run ruff check .`
 - Run type checking: `uv run mypy`
@@ -36,5 +37,5 @@ Webserver and WebSocket server to host BigRobotArmUI web page to control BigRobo
 ## Tests
 
 - `tests/test_job_manager.py`: queue lifecycle and queue-capacity behavior.
-- `tests/test_websocket_server.py`: JSON job routing, queue-status responses, and raw-command blocking while queued work is active.
+- `tests/test_websocket_server.py`: JSON job routing, queue-status responses, connect/disconnect handling, connection-loss reporting, and raw-command blocking while queued work is active.
 - `tests/test_usb_robot_arm.py`: serial port fallback and command forwarding behavior.
